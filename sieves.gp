@@ -3,6 +3,14 @@
 \\   "On kissing numbers and spherical codes in high dimensions."
 \\   Advances in Mathematics, Volume 335, 2018.
 \\   https://arxiv.org/abs/1803.02702
+\\
+\\ Wedge volume formula from
+\\   [BDGL16] Anja Becker, Léo Ducas, Nicolas Gama, Thijs Laarhoven.
+\\   "New directions in nearest neighbor searching with applications
+\\    to lattice sieving." SODA 2016.
+\\   https://eprint.iacr.org/2015/1128
+
+log2(x) = {if(x == 0, 0, log(x)/log(2))};
 
 log2_vol_cap(dim,angle) = {
   \\ Normalized spherical measure of a cap of the given angle.
@@ -42,25 +50,25 @@ JJP_log2_code_size_lower_bound(dim, angle) = {
 }
 
 BDGL_log2_wedge(n,a,b,t) = {
+  \\ Lemma 2.2 of [BDGL].
   \\ Suppose <x,y> = cos(t), C1 is a spherical cap of
   \\ angle a with center x, and C2 is a spherical cap of
   \\ angle b with center y. The "wedge" C1 intersect C2
   \\ has volume given by this function.
-  g2 = (cos(a)^2 + cos(b)^2 - 2*cos(a)*cos(b)*cos(t))/sin(t)^2;
-  n * log2(sqrt(1-g2)) - 2*log2(n);
+  g_sq = (cos(a)^2 + cos(b)^2 - 2*cos(a)*cos(b)*cos(t))/sin(t)^2;
+  log2_A = log2(g_sq) - 2*log2(1-g_sq);
+  n * log2(sqrt(1-g_sq)) + log2_A - 2*log2(n);
 }
 
-
-
-
 NV_cost(dim, quantum=0) = {
+  \\ Nguyen-Vidick sieve
   \\ Start with a list of size N ~ kissing number for dimension
   log2_N = JJP_log2_code_size_lower_bound(dim, Pi/3);
   \\ Test all pairs
   log2_test_cost = 0;
   if(quantum,
     log2_find_one_cost = .5 * log2_N + log2_test_cost,
-    log2_find_one_cost = log2_N);
+    log2_find_one_cost = log2_N + log2_test_cost);
   log2_find_all_cost = log2_N + log2_find_one_cost;
 
   log2_ops = log2_find_all_cost;
@@ -72,38 +80,29 @@ bgj1_cost(dim, t, quantum=0) = {
   \\ Start with a list of size N ~ kissing number for dimension
   log2_N = JJP_log2_code_size_lower_bound(dim, Pi/3);
   \\ Pick a random spherical cap of angle t.
-  \\ Make a bucket of vectors in N that lie in this cap.
-  \\ (Inclusion in spherical cap is tested using inner product.)
-  log2_test_cost = 0; \\ XXX: reasonable value here
+  \\ Bucket the vectors that lie in this cap.
+  \\ (Inclusion is an inner product test.)
+  log2_test_cost = 0;
   log2_fill_cost = log2_N + log2_test_cost;
   log2_bucket_size = log2_N + log2_vol_cap(dim, t);
-  \\ For each v in bucket, find w in bucket close to v (another inner product test)
-  \\ (There are O(1) neighbors of v in bucket)
+  \\ Fix some v in the bucket.
+  \\ Find all w in the bucket that are close to v. (inner product test)
+  \\ There are O(1) neighbors of v in bucket.
   if(quantum,
     log2_find_one_cost = .5 * log2_bucket_size + log2_test_cost, \\ Grover
     log2_find_one_cost = log2_bucket_size + log2_test_cost);     \\ Exhaustive
+  \\ Repeat for each v.
   log2_find_all_cost = log2_bucket_size + log2_find_one_cost;
   \\ Cost per filter is maximum of filling cost and checking cost
   log2_per_filter_cost = max(log2_fill_cost, log2_find_all_cost);
-  \\ The filter only detects a pair (v,w) with probability given by the
-  \\ normalized spherical measure of an intersection of caps of angle t
-  \\ at angular distance Pi/3.
+  \\ The filter only detects a pair (v,w) at angle < Pi/3 if the filter lies
+  \\ in the intersection of caps of angle t around v and w. This happens with
+  \\ probability given by the BDGL wedge formula.
   log2_p = BDGL_log2_wedge(dim, t, t, Pi/3);
-  \\ Repeat with random filters until we detect all pairs.
+  \\ Repeat with random filters until all pairs are detected.
   log2_ops = log2_per_filter_cost - log2_p;
   log2_space = log2_N;
   [log2_ops, log2_space];
-}
-
-bgj1_cost_min(dim) = {
-  my(log2_N, a, b);
-  log2_N = JJP_log2_code_size_lower_bound(dim, Pi/3);
-  \\ TODO: fine tuning
-  a = asin((3/4)^(1/4));
-  b = asin((3/4)^(1/6));
-  printf("Classical filter θ=%f, Ops: %d, Mem: %d , Bucket size: %d\n", a, bgj1_cost(dim,a), log2_N, (log2_N + log2_vol_cap(dim, a)));
-  printf("Quantum filter θ=%f, Ops: %d, Mem: %d, Bucket size: %d", b, bgj1_cost(dim,b,1), log2_N, (log2_N + log2_vol_cap(dim, b)));
-  bgj1_cost(dim,a);
 }
 
 BDGL_cost(dim, a, b, quantum=0) = {
@@ -127,22 +126,71 @@ BDGL_cost(dim, a, b, quantum=0) = {
   \\ Cost to find a neighbor of v is proportional to aggregate bucket size 
   if(quantum,
     log2_find_one_cost = max(log2_relevant_filters, .5*(log2_relevant_filters + log2_bucket_size)),
-    log2_find_one_cost = log2_relevant_filters + max(0, log2_bucket_size));
+    log2_find_one_cost = max(log2_relevant_filters,     log2_relevant_filters + log2_bucket_size));
   \\ This has to be done for each v.
   log2_find_all_cost = log2_N + log2_find_one_cost;
+
   log2_ops = max(log2_insert_cost, log2_find_all_cost);
   log2_space = max(log2_N, log2_t + log2_bucket_size);
   [log2_ops, log2_space];
 }
 
-BDGL_cost_min(dim) = {
-  my(log2_N, a, b);
-  log2_N = JJP_log2_code_size_lower_bound(dim, Pi/3);
-  \\ TODO: fine tuning
-  a1 = acos(1/2);
-  a2 = acos(sqrt(3/16));
-  printf("Classical Ops: %d, Mem: %d , Bucket size: %d\n", BDGL_cost(dim,a1,a1), log2_N, (log2_N + log2_vol_cap(dim, a1)));
-  printf("Quantum Ops: %d, Mem: %d, Bucket size: %d", BDGL_cost(dim,a2,a2,1), log2_N, (log2_N + log2_vol_cap(dim, a2)));
-  BDGL_cost(dim,a1,a1,0);
+local_min(f,x,A=1,B=5) = {
+  \\ Search left f(x-ε) and right f(x+ε) for a local minimum near f(x).
+  \\ ε will be determined to 10^-B, starting with steps of size 10^-A.
+  my(y, k);
+  y = f(x);
+  for(k=A, B, e=0.1^k; while(f(x-e) < y, x=x-e; y = f(x)));
+  for(k=A, B, e=0.1^k; while(f(x+e) < y, x=x+e; y = f(x)));
+  x
 }
 
+bgj1_cost_min(dim,quantum=0) = {
+  my(log2_N, c, q);
+  log2_N = JJP_log2_code_size_lower_bound(dim, Pi/3);
+
+  if(quantum,
+    \\ Asymptotically optimal filter angle for quantum bgj1 is asin((3/4)^(1/6)) = 1.2635...
+    t = local_min(x->(bgj1_cost(dim,x,1)[1]), asin((3/4)^(1/6))),
+    \\ Asymptotically optimal filter angle for classical bgj1 is asin((3/4)^(1/4)) = 1.1960...
+    t = local_min(x->(bgj1_cost(dim,x,0)[1]), asin((3/4)^(1/4))));
+
+  bgj1_cost(dim,t,quantum)[1];
+}
+
+BDGL_cost_min(dim,quantum=0) = {
+  my(log2_N, c, q);
+  log2_N = JJP_log2_code_size_lower_bound(dim, Pi/3);
+
+  if(quantum,
+    \\ Asymptotically optimal filter angle for quantum BDGL is acos(sqrt(3/16)) = 1.2296...
+    t = local_min(x->(BDGL_cost(dim,x,x,1)[1]), acos(sqrt(3/16))),
+    \\ Asymptotically optimal filter angle for classical BDGL is Pi/3 = 1.0471...
+    t = local_min(x->(BDGL_cost(dim,x,x,0)[1]), acos(1/2)));
+
+  BDGL_cost(dim,t,t,quantum)[1];
+}
+
+gen_tables() = {
+  my(bl,bh,s);
+
+  bl=50;
+  bh=1105;
+
+  s = "";
+  for(b=bl, bh,
+    s = concat(s, Strprintf("%d, %.1f\n", b, BDGL_cost_min(b,quantum=0))));
+  write("b.2925.csv", s);
+
+  s = "";
+  for(b=bl, bh,
+    s = concat(s, Strprintf("%d, %.1f\n", b, bgj1_cost_min(b,quantum=0))));
+  write("b.3496.csv", s);
+
+  s = "";
+  for(b=bl, bh,
+    s = concat(s, Strprintf("%d, %.1f\n", b, JJP_log2_code_size_lower_bound(b, Pi/3))));
+  write("b.2075.csv", s);
+}
+
+;
