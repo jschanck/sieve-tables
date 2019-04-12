@@ -162,8 +162,7 @@ local_min(f,x,A=1,B=5) = {
 }
 
 bgj1_cost_min(dim,quantum=0,JJP=0) = {
-  my(log2_N, t);
-  log2_N = JJP_log2_code_size_lower_bound(dim, Pi/3);
+  my(t);
 
   if(quantum,
     \\ Asymptotically optimal filter angle for quantum bgj1 is asin((3/4)^(1/6)) = 1.2635...
@@ -175,8 +174,7 @@ bgj1_cost_min(dim,quantum=0,JJP=0) = {
 }
 
 BDGL_cost_min(dim,quantum=0,JJP=0) = {
-  my(log2_N, t);
-  log2_N = JJP_log2_code_size_lower_bound(dim, Pi/3);
+  my(t);
 
   if(quantum,
     \\ Asymptotically optimal filter angle for quantum BDGL is acos(sqrt(3/16)) = 1.2296...
