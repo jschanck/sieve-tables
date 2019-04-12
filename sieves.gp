@@ -211,7 +211,7 @@ gen_tables() = {
   s = "";
   for(b=bl, bh,
     s = concat(s, Strprintf("%d, %.1f\n", b, bgj1_cost_min(b,quantum=0,JJP=1))));
-  write("b.3494.csv", s);
+  write("b.3494.jjp.csv", s);
 
   s = "";
   for(b=bl, bh,
