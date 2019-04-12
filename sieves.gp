@@ -41,6 +41,7 @@ JJP_q(angle) = {
 }
 
 JJP_log2_code_size_lower_bound(dim, angle) = {
+  my(log2_c);
   \\ Theorem 2 of [JJP18] (Linear improvement over CSW for any fixed angle).
   \\ A(dim,angle) >= (1+o(1)) * (CSW bound) * c(angle) * dim
   \\ where c(angle) = ln(sin(angle)/JJP_sin_q(angle))
@@ -50,6 +51,7 @@ JJP_log2_code_size_lower_bound(dim, angle) = {
 }
 
 BDGL_log2_wedge(n,a,b,t) = {
+  my(g_sq, log2_A);
   \\ Lemma 2.2 of [BDGL].
   \\ Suppose <x,y> = cos(t), C1 is a spherical cap of
   \\ angle a with center x, and C2 is a spherical cap of
@@ -60,10 +62,14 @@ BDGL_log2_wedge(n,a,b,t) = {
   n * log2(sqrt(1-g_sq)) + log2_A - 2*log2(n);
 }
 
-NV_cost(dim, quantum=0) = {
+NV_cost(dim, quantum=0, JJP=0) = {
+  my(log2_N, log2_test_cost, log2_find_one_cost, log2_find_all_cost,\
+     log2_ops, log2_space);
   \\ Nguyen-Vidick sieve
   \\ Start with a list of size N ~ kissing number for dimension
-  log2_N = JJP_log2_code_size_lower_bound(dim, Pi/3);
+  if(JJP,
+    log2_N = JJP_log2_code_size_lower_bound(dim, Pi/3),
+    log2_N = CSW_log2_code_size_lower_bound(dim, Pi/3));
   \\ Test all pairs
   log2_test_cost = 0;
   if(quantum,
@@ -76,9 +82,14 @@ NV_cost(dim, quantum=0) = {
   [log2_ops, log2_space];
 }
 
-bgj1_cost(dim, t, quantum=0) = {
+bgj1_cost(dim, t, quantum=0, JJP=0) = {
+  my(log2_N, log2_test_cost, log2_fill_cost, log2_bucket_size,\
+     log2_find_one_cost, log2_find_all_cost, log2_per_filter_cost,\
+     log2_p, log2_ops, log2_space);
   \\ Start with a list of size N ~ kissing number for dimension
-  log2_N = JJP_log2_code_size_lower_bound(dim, Pi/3);
+  if(JJP,
+    log2_N = JJP_log2_code_size_lower_bound(dim, Pi/3),
+    log2_N = CSW_log2_code_size_lower_bound(dim, Pi/3));
   \\ Pick a random spherical cap of angle t.
   \\ Bucket the vectors that lie in this cap.
   \\ (Inclusion is an inner product test.)
@@ -105,9 +116,14 @@ bgj1_cost(dim, t, quantum=0) = {
   [log2_ops, log2_space];
 }
 
-BDGL_cost(dim, a, b, quantum=0) = {
+BDGL_cost(dim, a, b, quantum=0, JJP=0) = {
+  my(log2_N, log2_t, log2_insert_cost, log2_bucket_size, \
+     log2_relevant_filters, log2_find_one_cost, log2_find_all_cost,\
+     log2_ops, log2_space);
   \\ Start with a list of size N ~ kissing number in dimension
-  log2_N = JJP_log2_code_size_lower_bound(dim, Pi/3);
+  if(JJP,
+    log2_N = JJP_log2_code_size_lower_bound(dim, Pi/3),
+    log2_N = CSW_log2_code_size_lower_bound(dim, Pi/3));
   \\ Initialize t := t(a,b) filters. Each filter defines a bucket.
   log2_t = -BDGL_log2_wedge(dim, a, b, Pi/3);
   \\ Each of the N vectors is inserted into a number of buckets
@@ -145,52 +161,67 @@ local_min(f,x,A=1,B=5) = {
   x
 }
 
-bgj1_cost_min(dim,quantum=0) = {
-  my(log2_N, c, q);
+bgj1_cost_min(dim,quantum=0,JJP=0) = {
+  my(log2_N, t);
   log2_N = JJP_log2_code_size_lower_bound(dim, Pi/3);
 
   if(quantum,
     \\ Asymptotically optimal filter angle for quantum bgj1 is asin((3/4)^(1/6)) = 1.2635...
-    t = local_min(x->(bgj1_cost(dim,x,1)[1]), asin((3/4)^(1/6))),
+    t = local_min(x->(bgj1_cost(dim,x,1,JJP)[1]), asin((3/4)^(1/6))),
     \\ Asymptotically optimal filter angle for classical bgj1 is asin((3/4)^(1/4)) = 1.1960...
-    t = local_min(x->(bgj1_cost(dim,x,0)[1]), asin((3/4)^(1/4))));
+    t = local_min(x->(bgj1_cost(dim,x,0,JJP)[1]), asin((3/4)^(1/4))));
 
   bgj1_cost(dim,t,quantum)[1];
 }
 
-BDGL_cost_min(dim,quantum=0) = {
-  my(log2_N, c, q);
+BDGL_cost_min(dim,quantum=0,JJP=0) = {
+  my(log2_N, t);
   log2_N = JJP_log2_code_size_lower_bound(dim, Pi/3);
 
   if(quantum,
     \\ Asymptotically optimal filter angle for quantum BDGL is acos(sqrt(3/16)) = 1.2296...
-    t = local_min(x->(BDGL_cost(dim,x,x,1)[1]), acos(sqrt(3/16))),
+    t = local_min(x->(BDGL_cost(dim,x,x,1,JJP)[1]), acos(sqrt(3/16))),
     \\ Asymptotically optimal filter angle for classical BDGL is Pi/3 = 1.0471...
-    t = local_min(x->(BDGL_cost(dim,x,x,0)[1]), acos(1/2)));
+    t = local_min(x->(BDGL_cost(dim,x,x,0,JJP)[1]), acos(1/2)));
 
   BDGL_cost(dim,t,t,quantum)[1];
 }
 
 gen_tables() = {
-  my(bl,bh,s);
+  my(bl,bh,s,b);
 
   bl=50;
   bh=1105;
 
   s = "";
   for(b=bl, bh,
-    s = concat(s, Strprintf("%d, %.1f\n", b, BDGL_cost_min(b,quantum=0))));
-  write("b.2925.csv", s);
+    s = concat(s, Strprintf("%d, %.1f\n", b, BDGL_cost_min(b,quantum=0,JJP=0))));
+  write("b.2924.csv", s);
 
   s = "";
   for(b=bl, bh,
-    s = concat(s, Strprintf("%d, %.1f\n", b, bgj1_cost_min(b,quantum=0))));
-  write("b.3496.csv", s);
+    s = concat(s, Strprintf("%d, %.1f\n", b, BDGL_cost_min(b,quantum=0,JJP=1))));
+  write("b.2924.jjp.csv", s);
+
+  s = "";
+  for(b=bl, bh,
+    s = concat(s, Strprintf("%d, %.1f\n", b, bgj1_cost_min(b,quantum=0,JJP=0))));
+  write("b.3494.csv", s);
+
+  s = "";
+  for(b=bl, bh,
+    s = concat(s, Strprintf("%d, %.1f\n", b, bgj1_cost_min(b,quantum=0,JJP=1))));
+  write("b.3494.csv", s);
+
+  s = "";
+  for(b=bl, bh,
+    s = concat(s, Strprintf("%d, %.1f\n", b, CSW_log2_code_size_lower_bound(b, Pi/3))));
+  write("b.2075.csv", s);
 
   s = "";
   for(b=bl, bh,
     s = concat(s, Strprintf("%d, %.1f\n", b, JJP_log2_code_size_lower_bound(b, Pi/3))));
-  write("b.2075.csv", s);
+  write("b.2075.jjp.csv", s);
 }
 
 ;
