@@ -1,6 +1,8 @@
 * b.2075.csv gives a lower bound on the kissing number in dimension b.
-* b.2925.csv gives a lower bound on the cost of the BDGL sieve.
-* b.3496.csv gives a lower bound on the cost of the bgj1 sieve.
+* b.2924.csv gives a lower bound on the cost of the BDGL sieve.
+* b.3494.csv gives a lower bound on the cost of the bgj1 sieve.
+* The \*.jjp.csv files use the JJP lower bound on the kissing number
+instead of the cap volume lower bound.
 
 Further information can be found in my Apr. 11, 2019 email to the pqc-forum,
 reproduced below.
