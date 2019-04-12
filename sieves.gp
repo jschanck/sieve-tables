@@ -170,7 +170,7 @@ bgj1_cost_min(dim,quantum=0,JJP=0) = {
     \\ Asymptotically optimal filter angle for classical bgj1 is asin((3/4)^(1/4)) = 1.1960...
     t = local_min(x->(bgj1_cost(dim,x,0,JJP)[1]), asin((3/4)^(1/4))));
 
-  bgj1_cost(dim,t,quantum)[1];
+  bgj1_cost(dim,t,quantum,JJP)[1];
 }
 
 BDGL_cost_min(dim,quantum=0,JJP=0) = {
@@ -182,7 +182,7 @@ BDGL_cost_min(dim,quantum=0,JJP=0) = {
     \\ Asymptotically optimal filter angle for classical BDGL is Pi/3 = 1.0471...
     t = local_min(x->(BDGL_cost(dim,x,x,0,JJP)[1]), acos(1/2)));
 
-  BDGL_cost(dim,t,t,quantum)[1];
+  BDGL_cost(dim,t,t,quantum,JJP)[1];
 }
 
 gen_tables() = {
