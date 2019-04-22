@@ -115,7 +115,7 @@ local_min(f,x,E=[1,5]) = {
 bgj1_cost_min(dim,guess=asin((3/4)^(1/4))) = {
   my(t, E);
 
-  E = [3,3];
+  E = [4,4];
 
   t = local_min(x->(bgj1_cost(dim,x,0)[1]), guess, E);
 
