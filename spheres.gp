@@ -1,3 +1,5 @@
+log2(x) = {if(x == 0, 0, log(x)/log(2))};
+
 beta(a,b) = {
   gamma(a)*gamma(b)/gamma(a+b);
 }

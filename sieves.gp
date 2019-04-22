@@ -1,11 +1,20 @@
-
-log2(x) = {if(x == 0, 0, log(x)/log(2))};
-
 read("spheres.gp")
 
+\\ Digits of precision
+\p 57
+
+\\ Use exact cap and wedge volumes.
 log2_cap    = log2_cap_beta;
 log2_wedge  = log2_wedge_intnum;
+\\ Use asymptotic volume estimates.
+\\log2_cap    = log2_cap_asymp;
+\\log2_wedge  = log2_wedge_bdgl;
+
+\\ Use 1/(cap volume) for list size
 log2_list_size = log2_CSW;
+\\ Use a lower bound on the kissing constant for the list size
+\\log2_list_size = log2_JJP;
+
 
 NV_cost(dim, quantum=0) = {
   my(log2_N, log2_test_cost, log2_find_one_cost, log2_find_all_cost,\
@@ -134,7 +143,6 @@ BDGL_cost_min(dim,guess=Pi/3) = {
   [t, BDGL_cost(dim,t,t)[1]];
 }
 
-\p 115
 gen_tables() = {
   my(bl,bh,s,b,t);
 
