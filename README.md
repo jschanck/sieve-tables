@@ -5,37 +5,44 @@ of an intersection of spherical caps of angles a and b whose
 centers are at an angular distance of pi/3.
 
 # Table entries
-- 2075.csv lists (d, 1/C(d))
-- 2924.csv lists (d, cos(a), cos(b), 1/(C(d)W(d,a,b))) for a choice of a and b that is explained below.
-- 3494.csv lists (d, cos(a), 1/(C(d)W(d,a,a))) for a choice of a that is explained below.
+- 2075.csv lists (d, -log2(C(d)))
+- 2924.csv lists (d, cos(a), cos(b), -log2(C(d)W(d,a,b))) for a choice of a and b that is explained below.
+- 3494.csv lists (d, cos(a), -log2(C(d)W(d,a,a))) for a choice of a that is explained below.
 
 # How to interpret the tables
 
 ## 2075.csv
-Sieving algorithms for the shortest vector problem attempt to find many
-pairs of lattice vectors that are at an angular distance of pi/3 or
-less.  The "kissing constant" in dimension d is the size of the
-largest list of d-dimensional unit vectors that does not contain
-a pair of vectors at angular distance < pi/3. The kissing
-constant is known to be larger than 1/C(d) =
-2^((0.2075....+o(1))d), but the best known lower bound only
-exceeds 1/C(d) by a linear factor in d [JJP].
+Sieving algorithms for the shortest vector problem take a large list of random
+lattice vectors and attempt to find pairs of vectors that are at an angular
+distance of < pi/3.  Each pair can be combined to produce a shorter
+vector. If the number of pairs found is proportional to the input list size,
+then it may be possible to recurse on the output list and produce a shortest vector.
 
-Some analyses of sieving algorithms, e.g. [BDGL], assume that many
-pairs of lattice vectors with small angular distance can be
-found in a random list of size 1/C(d). This assumption is consistent
-with the largest sieving experiments performed to date [G6K].
-However, to my knowledge, no one has performed experiments that
-are specifically designed to estimate the minimum list size
-necessary for sieving.
+The "kissing constant" in dimension d is the size of the largest list of
+d-dimensional unit vectors that does not contain a pair of vectors at angular
+distance < pi/3. The kissing constant is known to be larger than 1/C(d) =
+2^((0.2075....+o(1))d), but the best known lower bound only exceeds 1/C(d) by a
+linear factor in d [JJP].
 
-This table should be interpreted as a folklore estimate for
-the number of lattice vectors that any sieving algorithm must
-enumerate. It is neither an upper bound nor a lower bound on
-this quantity.
+Heuristic analyses of sieving algorithms, e.g. [BDGL], assume that
+(1/C(d))^(1+o(1)) pairs of lattice vectors with small angular distance can be
+found in a random list of size (1/C(d))^(1+o(1)). This assumption is consistent
+with the largest sieving experiments performed to date [G6K]. However, to my
+knowledge, no one has performed experiments that are specifically designed to
+estimate the minimum list size necessary for sieving.
+
+Some analyses go farther and assume that the o(1) terms are 0, e.g. the
+"best plausible attack" in [NewHope] assumes that many good pairs will be
+found in a list of size 2^(0.2075d).
+
+This table should be interpreted as a folklore estimate for the number of
+lattice vectors that any sieving algorithm must enumerate. It ignores the
+o(1) in the list size assumed by heuristic analyses, i.e. in (1/C(d))^(1+o(1)),
+but computes 1/C(d) exactly. Note that there is little evidence to suggest that
+the ignored o(1) term is positive for dimensions relevant to cryptanalysis.
 
 ## 2924.csv
-Consider the following experiment with parameters d, n, t, a, b:
+Consider the following experiment that has parameters d, n, t, a, b:
 1. Sample a list L of n i.i.d. uniform points on the d-1 sphere,
 2. Sample a list F of t i.i.d. uniform points on the d-1 sphere,
 3. For each (v,w) in L x L, compare v and w if and only if there exists
@@ -43,7 +50,7 @@ f in F such that <v,f> > cos(a)  and  <w,f> > cos(b). (To compare v
 and w is to test whether <v,w> > cos(pi/3).)
 
 The fourth column of 2924.csv should be interpreted as the expected number of
-comparisons in step 3 when n = 1/C(d), t = 1/W(d,a,b), and a=b=pi/3.
+"<v,w> > 1/2" comparisons in step 3 when n = 1/C(d), t = 1/W(d,a,b), and a=b=pi/3.
 
 #### Relevance to sieving algorithms:
 
@@ -55,8 +62,8 @@ of implementing the map:
   `v -> { (v,w) : exists f in F with <v, f> > cos(a) and <w, f> > cos(b) }`
 
 Using the data structures in [BDGL], the optimal, asymptotic,
-choice of both a and b is pi/3. The expected number of
-comparisons, in this case, tends to
+choice of both a and b is pi/3 when n = 1/C(d). The expected number
+of comparisons, in this case, tends to
 1/(C(d)W(d,pi/3,pi/3)) ~ 2^((0.2924...+o(1))d) as d->oo.
 
 ## 3494.csv
@@ -77,26 +84,27 @@ Step 3 of the experiment compares all pairs in
 
 `L' = {v in L : <v,f> > cos(a)}`,
 
-and the list L' can be constructed in time L.
+and the list L' can be constructed in time |L|=n.
 With cos(a)=0 the algorithm makes all of its comparisons in one iteration and
 performs ~n^2 comparisons in total. As a is decreased the number of iterations
 increases but the number of comparisons per iteration decreases. The second
 column of 3494.csv lists the value of cos(a) that minimizes the
-total number of comparisons. The optimal, asymptotic, choice of cos(a) for
-n=1/C(d) is ~ sqrt(1 - sqrt(3/4)). In this case, the expected number of
+total number of comparisons. The optimal, asymptotic, choice of cos(a), when
+n=1/C(d), is ~ sqrt(1 - sqrt(3/4)). In this case, the expected number of
 comparisons tends to 2^((0.3494...+o(1))d).
 
 This sieving algorithm is described in Section 5.1.bgj1 of
 [G6K]. Note that [G6K] describes an algorithm for Exact-SVP in
 dimension d that calls this sieve in dimension < d. The data
 reported in Figure 3 of [G6K] is for this Exact-SVP algorithm,
-and not for a direct application of the sieve. Figure 3 reports 2^42
-Xeon E5-2650v3 cycles for d=100 (on average), and calls the
-sieve in dimension 82 (on average). The table estimates 2^35
-comparisons in dimension 82. [G6k] reports that comparisons are
-implemented using a procedure that "consists of about a dozen
-x86 non-vectorised instructions for vectors of dimension
-roughly one hundred." More systematic experiments are needed.
+not for a direct application of the sieve. Figure 3 reports 2^42
+Xeon E5-2650v3 cycles for d=100 (on average), and this figure accounts
+for calls to the sieve in dimension 82 (on average). The table
+estimates 2^35 comparisons in dimension 82. [G6k] reports that
+comparisons are implemented using a procedure that "consists of
+about a dozen x86 non-vectorised instructions for vectors of
+dimension roughly one hundred." More systematic experiments are
+needed.
 
 
 # Cap and Wedge volume calculations
@@ -131,3 +139,6 @@ Advances in Mathematics, Volume 335, 2018.
 
 [LK] Yongjae Lee, Woo Chang Kim. "Concise formulas for the surface area of the
 intersection of two hyperspherical caps." [pdf](https://ie.kaist.ac.kr/uploads/professor/tech_file/Concise+Formulas+for+the+Surface+Area+of+the+Intersection+of+Two+Hyperspherical+Caps.pdf)
+
+[NewHope] Erdem Alkim, Léo Ducas, Thomas Pöppelmann, Peter Schwabe.
+  "Post-quantum key exchange—a new hope." 2016. [ePrint](https://eprint.iacr.org/2015/1092)
