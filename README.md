@@ -41,6 +41,11 @@ o(1) in the list size assumed by heuristic analyses, i.e. in (1/C(d))^(1+o(1)),
 but computes 1/C(d) exactly. Note that there is little evidence to suggest that
 the ignored o(1) term is positive for dimensions relevant to cryptanalysis.
 
+(Correction 2019-05-01: The 2075.csv table is only relevant to so-called 2-sieves.
+In general, a k-sieve looks for short integer combinations of k vectors
+at a time; estimates for the initial list size depend on k, see, e.g. [BLS].
+Thanks to Thijs Laarhoven for pointing this out.)
+
 ## 2924.csv
 Consider the following experiment that has parameters d, n, t, a, b:
 1. Sample a list L of n i.i.d. uniform points on the d-1 sphere,
@@ -90,7 +95,7 @@ performs ~n^2 comparisons in total. As a is decreased the number of iterations
 increases but the number of comparisons per iteration decreases. The second
 column of 3494.csv lists the value of cos(a) that minimizes the
 total number of comparisons. The optimal, asymptotic, choice of cos(a), when
-n=1/C(d), is ~ sqrt(1 - sqrt(3/4)). In this case, the expected number of
+n=1/C(d), is sqrt(1 - sqrt(3/4)). In this case, the expected number of
 comparisons tends to 2^((0.3494...+o(1))d).
 
 This sieving algorithm is described in Section 5.1.bgj1 of
@@ -100,7 +105,7 @@ reported in Figure 3 of [G6K] is for this Exact-SVP algorithm,
 not for a direct application of the sieve. Figure 3 reports 2^42
 Xeon E5-2650v3 cycles for d=100 (on average), and this figure accounts
 for calls to the sieve in dimension 82 (on average). The table
-estimates 2^35 comparisons in dimension 82. [G6k] reports that
+estimates 2^35 comparisons in dimension 82. [G6K] reports that
 comparisons are implemented using a procedure that "consists of
 about a dozen x86 non-vectorised instructions for vectors of
 dimension roughly one hundred." More systematic experiments are
@@ -124,6 +129,10 @@ GP/PARI 2.12.0 (alpha). The scripts will not work with PARI <
 "New directions in nearest neighbor searching with applications
 to lattice sieving." SODA 2016.
 [ePrint](https://eprint.iacr.org/2015/1128)
+
+[BLS] Shi Bai, Thijs Laarhoven, Damien Stehle.
+"Tuple lattice sieving." ANTS 2016.
+[ePrint](https://eprint.iacr.org/2016/713)
 
 [G6K]
 Martin R. Albrecht, Léo Ducas, Gottfried Herold, Elena
