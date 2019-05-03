@@ -77,7 +77,7 @@ Consider the following experiment with parameters d, n, a:
 2. Independently, draw a uniform point f on the d-1 sphere,
 3. For each pair (v,w) in L^2, compare v and w if and only if
    <v,f> > cos(a)   and   <w,f> > cos(a).
-4. repeat 2-3 until n pairs (v,w) with <v,w> < 1/2 are found.
+4. repeat 2-3 until n pairs (v,w) with <v,w> > 1/2 are found.
 
 The third column of 3494.csv should be interpreted as the expected number of
 comparisons in this experiment when n = 1/C(d) and a is given by
